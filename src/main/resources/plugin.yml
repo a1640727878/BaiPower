@@ -1,0 +1,14 @@
+version: '@version@'
+name: BaiPower
+main: sky_bai.bukkit.baipower.BaiPower
+api-version: 1.13
+depend: 
+- ProtocolLib
+- PlaceholderAPI
+authors: 
+- sky_bai
+
+
+commands: 
+  BaiPower: 
+    description: commands
