@@ -8,7 +8,6 @@ depend:
 authors: 
 - sky_bai
 
-
 commands: 
   BaiPower: 
     description: commands
