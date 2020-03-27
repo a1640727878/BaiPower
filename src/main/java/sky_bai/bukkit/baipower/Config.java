@@ -2,7 +2,7 @@ package sky_bai.bukkit.baipower;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.potion.PotionEffect;
@@ -40,6 +41,7 @@ public class Config {
 
 		Date.PowerRegain_Value = config.getInt("PowerRegain.Value", Date.PowerRegain_Value);
 		Date.PowerRegain_Time = config.getInt("PowerRegain.Time", Date.PowerRegain_Time);
+		Date.PowerRegain_CoolDownTime = config.getInt("PowerRegain.CoolDownTime", Date.PowerRegain_CoolDownTime);
 		Date.PowerRegain_FoodLevel = config.getInt("PowerRegain.FoodLevel", Date.PowerRegain_FoodLevel);
 
 		Date.WorldWhiteList.clear();
@@ -69,18 +71,21 @@ public class Config {
 		}
 
 		Date.Event_Sprint_Value = config.getInt("Event.Sprint.Value", Date.Event_Sprint_Value);
+		Date.Event_Sprint_Power = config.getInt("Event.Sprint.Power", Date.Event_Sprint_Power);
 		Date.Event_Sprint_CoolDownTime = config.getInt("Event.Sprint.CoolDownTime", Date.Event_Sprint_CoolDownTime);
-		
+
 		Date.PotionList.clear();
-		Set<String> PotionListKeys = config.getConfigurationSection("PotionList").getKeys(false);
+		ConfigurationSection potionListSection = config.getConfigurationSection("PotionList");
+		Set<String> PotionListKeys = potionListSection.getKeys(false);
 		for (String key : PotionListKeys) {
 			Integer i = Integer.valueOf(key);
-			Set<String> PotionKeys = config.getConfigurationSection(key).getKeys(false);
-			List<PotionEffect> potions = new ArrayList<PotionEffect>();
+			ConfigurationSection cSection = potionListSection.getConfigurationSection(key);
+			Set<String> PotionKeys = cSection.getKeys(false);
+			Potion potions = Potion.newInstance();
 			for (String key2 : PotionKeys) {
-				potions.add(new PotionEffect(PotionEffectType.getByName(key2), 2, i));
+				potions.add(PotionEffectType.getByName(key2), cSection.getInt(key2));
 			}
-			Date.PotionList.put(i, potions);
+			Date.PotionList.put(i, potions.getPotions());
 		}
 	}
 
@@ -89,6 +94,7 @@ public class Config {
 
 		config.set("PowerRegain.Value", Date.PowerRegain_Value);
 		config.set("PowerRegain.Time", Date.PowerRegain_Time);
+		config.set("PowerRegain.CoolDownTime", Date.PowerRegain_CoolDownTime);
 		config.set("PowerRegain.FoodLevel", Date.PowerRegain_FoodLevel);
 
 		List<String> worldWhiteListsStrings = new ArrayList<String>();
@@ -109,14 +115,16 @@ public class Config {
 		}
 
 		config.set("Event.Sprint.Value", Date.Event_Sprint_Value);
+		config.set("Event.Sprint.Power", Date.Event_Sprint_Power);
 		config.set("Event.Sprint.CoolDownTime", Date.Event_Sprint_CoolDownTime);
 
-		for (Integer integer : Date.PotionList.keySet()) {
-			for (PotionEffect potion : Date.PotionList.get(integer)) {
-				config.set("PotionList."+integer+"."+potion.getType().getName(), potion.getAmplifier());
-			}
-		}
-		
+		config.set("PotionList.10.SLOW_DIGGING", 3);
+		config.set("PotionList.10.SLOW", 3);
+		config.set("PotionList.20.SLOW_DIGGING", 2);
+		config.set("PotionList.20.SLOW", 2);
+		config.set("PotionList.30.SLOW_DIGGING", 1);
+		config.set("PotionList.30.SLOW", 1);
+
 		try {
 			config.save(configFile);
 		} catch (Throwable e) {
@@ -136,6 +144,7 @@ public class Config {
 		public static Integer DefaultMaxPower = 100;
 
 		public static Integer PowerRegain_Value = 1;
+		public static Integer PowerRegain_CoolDownTime = 10;
 		public static Integer PowerRegain_Time = 20;
 		public static Integer PowerRegain_FoodLevel = 6;
 
@@ -158,22 +167,14 @@ public class Config {
 		}
 
 		public static Integer Event_Sprint_Value = 1;
+		public static Integer Event_Sprint_Power = 30;
 		public static Integer Event_Sprint_CoolDownTime = 5;
 
-		public static Map<Integer, List<PotionEffect>> PotionList = new HashMap<Integer, List<PotionEffect>>();
+		public static Map<Integer, Collection<PotionEffect>> PotionList = new HashMap<Integer, Collection<PotionEffect>>();
 		static {
-			PotionEffect pe1 = new PotionEffect(PotionEffectType.SLOW_DIGGING, 2, 3);
-			PotionEffect pe2 = new PotionEffect(PotionEffectType.SLOW, 2, 3);
-			List<PotionEffect> pes1 = Arrays.asList(pe1,pe2);
-			PotionList.put(10, pes1);
-			PotionEffect pe3 = new PotionEffect(PotionEffectType.SLOW_DIGGING, 2, 2);
-			PotionEffect pe4 = new PotionEffect(PotionEffectType.SLOW, 2, 2);
-			List<PotionEffect> pes2 = Arrays.asList(pe3,pe4);
-			PotionList.put(20, pes2);
-			PotionEffect pe5 = new PotionEffect(PotionEffectType.SLOW_DIGGING, 2, 1);
-			PotionEffect pe6 = new PotionEffect(PotionEffectType.SLOW, 2, 1);
-			List<PotionEffect> pes3 = Arrays.asList(pe5,pe6);
-			PotionList.put(30, pes3);
+			PotionList.put(10, Potion.newInstance().add(PotionEffectType.SLOW_DIGGING, 3).add(PotionEffectType.SLOW, 3).getPotions());
+			PotionList.put(20, Potion.newInstance().add(PotionEffectType.SLOW_DIGGING, 2).add(PotionEffectType.SLOW, 2).getPotions());
+			PotionList.put(30, Potion.newInstance().add(PotionEffectType.SLOW_DIGGING, 3).add(PotionEffectType.SLOW, 3).getPotions());
 		}
 	}
 }

@@ -10,7 +10,7 @@ public class PlayerDate {
 	public static Map<Player, Date> playerDate = new HashMap<Player, PlayerDate.Date>();
 
 	public static void add(Player player) {
-		playerDate.put(player, new Date(player, Config.Date.DefaultMaxPower, Config.Date.PowerRegain_Value));
+		playerDate.put(player, new Date(player, ConfigPlayerDate.getPlayerQuitPower(player), ConfigPlayerDate.getMaxPower(player), ConfigPlayerDate.getRegainPowerValue(player)));
 	}
 
 	public static void del(Player player) {
@@ -18,7 +18,11 @@ public class PlayerDate {
 	}
 
 	public static Date get(Player player) {
-		return playerDate.get(player);
+		if (playerDate.keySet().contains(player)) {
+			return playerDate.get(player);
+		} else {
+			return null;
+		}
 	}
 
 	public static class Date {
@@ -27,16 +31,17 @@ public class PlayerDate {
 		Integer power;
 		Integer maxPower;
 		Integer regainPowerValue;
+		Integer regainPower_CoolDownTime = 0;
 		Integer timeAtack = 0;
 		Integer timeBreak = 0;
 		Integer timeSprint = 0;
 		Boolean hideBossBar = false;
 		Boolean regainPower = true;
 
-		Date(Player player, Integer maxPower, Integer regainPowerValue) {
+		Date(Player player, Integer power, Integer maxPower, Integer regainPowerValue) {
 			this.player = player;
 			this.maxPower = maxPower;
-			this.power = maxPower;
+			this.power = power;
 			this.regainPowerValue = regainPowerValue;
 		}
 
@@ -57,7 +62,7 @@ public class PlayerDate {
 		}
 
 		public void subPower(Integer power) {
-			this.power = this.power + power;
+			this.power = this.power - power;
 		}
 
 		public Integer getMaxPower() {
@@ -78,6 +83,18 @@ public class PlayerDate {
 			ConfigPlayerDate.setRegainPowerValue(player, regainPowerValue);
 		}
 
+		public Integer getRegainPower_CoolDownTime() {
+			return regainPower_CoolDownTime;
+		}
+
+		public void setRegainPower_CoolDownTime(Integer regainPower_CoolDownTime) {
+			this.regainPower_CoolDownTime = regainPower_CoolDownTime;
+		}
+
+		public void subRegainPower_CoolDownTime() {
+			regainPower_CoolDownTime = regainPower_CoolDownTime - (regainPower_CoolDownTime < 1 ? 0 : 1);
+		}
+
 		public Integer getTimeAtack() {
 			return timeAtack;
 		}
@@ -87,7 +104,7 @@ public class PlayerDate {
 		}
 
 		public void subTimeAtack() {
-			timeAtack = timeAtack - (timeAtack <= 0 ? 0 : 1);
+			timeAtack = timeAtack - (timeAtack < 1 ? 0 : 1);
 		}
 
 		public Integer getTimeBreak() {
@@ -99,7 +116,7 @@ public class PlayerDate {
 		}
 
 		public void subTimeBreak() {
-			timeBreak = timeBreak - (timeBreak <= 0 ? 0 : 1);
+			timeBreak = timeBreak - (timeBreak < 1 ? 0 : 1);
 		}
 
 		public Integer getTimeSprint() {
@@ -111,7 +128,7 @@ public class PlayerDate {
 		}
 
 		public void subTimeSprint() {
-			timeSprint = timeSprint - (timeSprint <= 0 ? 0 : 1);
+			timeSprint = timeSprint - (timeSprint < 1 ? 0 : 1);
 		}
 
 		public Boolean getHideBossBar() {
